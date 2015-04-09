@@ -1,0 +1,7 @@
+export OS_USERNAME="facebook100000270138421"
+export OS_TENANT_ID=5002bc2975db4dc4ae9dac6580e1f752
+export OS_TENANT_NAME="facebook100000270138421"
+export OS_PASSWORD=de1NzsyUPRt33oTK
+export OS_AUTH_URL=http://8.21.28.222:5000/v2.0/
+export OS_REGION_NAME=RegionOne
+export PS1='[\u@\h \W(keystone_trystack)]\$ '
