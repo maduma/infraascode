@@ -25,7 +25,7 @@ deploy)
 	neutron router-gateway-set router external
 	neutron router-interface-add router service
 
-	echo Using IMAGE as wordpress image
+	echo Using $IMAGE as wordpress image
 	glance image-create \
 	--name wordpress \
 	--disk-format qcow2 \
