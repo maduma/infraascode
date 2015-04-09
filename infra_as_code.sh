@@ -4,6 +4,23 @@
 # sample script to deploy cms + loadbalancer on openstack IaaS
 #
 
+case "$OS_USERNAME" in
+facebook100000270138421)
+	IMAGE=tinyweb.img
+	;;
+cms)
+	IMAGE=wordpress.img
+	;;
+*)
+	echo "source the keystonerc before running this script"
+	exit 1
+	;;
+esac
+
+
+if [ "$OS_USERNAME" == "iid" ]; then
+	IMAGE=tinyweb.img
+
 case "$1" in
 create)
 	neutron net-create private
@@ -16,7 +33,7 @@ create)
 	--name wordpress \
 	--disk-format qcow2 \
 	--container-format bare \
-	--file $PWD/wordpress.img \
+	--file $PWD/$IMAGE \
 	--progress
 
 	nova secgroup-create web web
