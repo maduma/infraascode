@@ -17,18 +17,15 @@ cms)
 	;;
 esac
 
-
-if [ "$OS_USERNAME" == "iid" ]; then
-	IMAGE=tinyweb.img
-
 case "$1" in
-create)
+deploy)
 	neutron net-create private
 	neutron subnet-create --name service --dns-nameserver 172.16.2.1 private 10.0.0.0/24
 	neutron router-create router
 	neutron router-gateway-set router external
 	neutron router-interface-add router service
 
+	echo Using IMAGE as wordpress image
 	glance image-create \
 	--name wordpress \
 	--disk-format qcow2 \
@@ -60,7 +57,7 @@ create)
 	neutron floatingip-associate $FIPID $VIPPORT
 
 	;;
-delete)
+undeploy)
 	FIPID=$( neutron floatingip-list | perl -lne 'print $1 if /^\| (\S{10,})/' )
 	neutron floatingip-disassociate $FIPID
 
@@ -93,6 +90,6 @@ delete)
 	neutron net-delete private
 	;;
 *)
-	echo `basename $0` "create|delete"
+	echo `basename $0` "deploy|undeploy"
 	;;
 esac
