@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 #
 # sample script to deploy cms + loadbalancer on openstack IaaS
