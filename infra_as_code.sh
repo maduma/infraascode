@@ -8,8 +8,9 @@ case "$OS_USERNAME" in
 facebook100000270138421)
 	IMAGE=tinyweb.img
 	;;
-cms)
+cms|admin|snsakala)
 	IMAGE=wordpress.img
+	MYSQL=yes
 	;;
 *)
 	echo "source the keystonerc before running this script"
@@ -33,19 +34,35 @@ deploy)
 	--file $PWD/$IMAGE \
 	--progress
 
+	[ -n "$MYSQL" ] && glance image-create \
+	--name mysql \
+	--disk-format qcow2 \
+	--container-format bare \
+	--file $PWD/mysql.img \
+	--progress
+
+
 	nova secgroup-create web web
 	nova secgroup-add-rule web tcp 80 80 0.0.0.0/0
 
 	nova keypair-add --pub-key $PWD/snsakala_rsa.pub snsakala
 
-	nova boot --key-name snsakala --security-groups default,web --flavor m1.small --image wordpress cms1
-	nova boot --key-name snsakala --security-groups default,web --flavor m1.small --image wordpress cms2
+	NETID=$( neutron net-list | perl -lne 'print $1 if /^\| (\S{10,}) \| private/' )
+
+	[ -n "$MYSQL" ] && { 
+		nova boot --key-name snsakala --security-groups default --flavor m1.medium --image mysql \
+        	--nic net-id=$NETID mysql
+		while [ "$( nova list | grep mysql | grep ACTIVE | wc -l )" -ne 1 ]; do sleep 1; done
+	}
+
+	nova boot --key-name snsakala --security-groups default,web --flavor m1.small --image wordpress --nic net-id=$NETID cms1
+	nova boot --key-name snsakala --security-groups default,web --flavor m1.small --image wordpress --nic net-id=$NETID cms2
 
 	while [ "$( nova list | grep cms | grep ACTIVE | wc -l )" -ne 2 ]; do sleep 1; done
 
 	neutron lb-pool-create --lb-method ROUND_ROBIN --name wordpress --protocol HTTP --subnet-id service
 	neutron lb-vip-create --name wordpress --protocol-port 80 --protocol HTTP --subnet-id service wordpress
-	IPS=$( nova list | perl -lne 'print $1 if /((\d+\.){3}\d+)/' )
+	IPS=$( nova list | perl -lne 'print $1 if / cms. .* private=((\d+\.){3}\d+)/' )
 	for IP in $IPS; do
 		neutron lb-member-create --address $IP --protocol-port 80 wordpress
 	done
@@ -76,12 +93,14 @@ undeploy)
 
 	nova delete cms2
 	nova delete cms1
+	[ -n "$MYSQL" ] && nova delete mysql
 
 	nova keypair-delete snsakala
 
 	nova secgroup-delete web
 
 	glance image-delete wordpress
+	[ -n "$MYSQL" ] && glance image-delete mysql
 
 	neutron router-interface-delete router service
 	neutron router-gateway-clear router 

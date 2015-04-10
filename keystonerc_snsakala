@@ -1,0 +1,6 @@
+export OS_USERNAME=snsakala
+export OS_TENANT_NAME=snsakala
+export OS_PASSWORD=snsakala
+export OS_AUTH_URL=http://172.18.3.10:5000/v2.0/
+export OS_REGION_NAME=RegionOne
+export PS1='[\u@\h \W(keystone_snsakala)]\$ '
